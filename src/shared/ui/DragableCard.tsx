@@ -9,8 +9,8 @@ type Props = {
 };
 
 export default function DragableCard({ children, minHeight, minWidth }: Props) {
-  const body = document.querySelector("body")!;
-  const bodyRef = useRef<HTMLBodyElement>(body);
+  // const body = document.querySelector("body")!;
+  // const bodyRef = useRef<HTMLBodyElement>(body);
   const resizeableRef = useRef<HTMLDivElement | null>(null);
   const control = useDragControls();
 
@@ -23,14 +23,22 @@ export default function DragableCard({ children, minHeight, minWidth }: Props) {
   };
 
   return (
-    <div id="dragger" ref={resizeableRef} style={{ width: `${minWidth}px`, height: `${minHeight}px` }}>
+    <div
+      id="dragger"
+      ref={resizeableRef}
+      style={{
+        width: `${minWidth}px`,
+        height: `${minHeight}px`,
+      }}
+    >
       <motion.div
-        style={{ width: "100%", height: "100%", position: "relative" }}
+        style={{ position: "relative" }}
         drag
         draggable={true}
         dragControls={control}
-        dragConstraints={bodyRef}
         dragPropagation={true}
+        dragMomentum={false}
+        // dragConstraints={bodyRef}
       >
         {children}
         <i

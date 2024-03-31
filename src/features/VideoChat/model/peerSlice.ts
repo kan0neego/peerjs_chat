@@ -1,4 +1,4 @@
-import Peer, { MediaConnection } from "peerjs";
+import Peer from "peerjs";
 import { create } from "zustand";
 import type { PeerSliceAction, PeerSliceStore } from "../types";
 

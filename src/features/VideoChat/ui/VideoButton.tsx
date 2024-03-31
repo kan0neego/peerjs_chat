@@ -6,21 +6,35 @@ type Props = {
   stream: MediaStream | null;
 };
 
+const voiceOffIcon = '<i class="fa fa-video fa-inverse"></i>';
+const voiceOnIcon = '<i class="fa fa-video-slash fa-inverse"></i>';
+
 export default function VideoButton({ stream, disabled }: Props) {
-  const buttonRef = useRef<HTMLSpanElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
 
   return (
     <button
+      ref={buttonRef}
       className="button__sm button__sm--blue"
       disabled={disabled}
       onClick={() => {
         if (!stream) return;
-       switchVideo(stream);
+        const turnOn = switchVideo(stream);
+        if (buttonRef.current) {
+          if (turnOn) {
+            buttonRef.current.innerHTML = voiceOffIcon;
+          } else {
+            buttonRef.current.innerHTML = voiceOnIcon;
+          }
+        }
+      }}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
-      <span ref={buttonRef} >
-        <i className="fa fa-video-camera fa-inverse"></i>
-      </span>
+        <i className="fa fa-video fa-inverse"></i>
     </button>
   );
 }

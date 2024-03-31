@@ -26,6 +26,8 @@ export default async function videoSharing(_connections: {
       }
 
       return localStream;
+    }).catch(err => {
+      return null;
     });
 
   return localStream;

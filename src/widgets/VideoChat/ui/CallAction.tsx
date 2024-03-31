@@ -11,7 +11,7 @@ type Props = {
 export default function CallAction({ id, peer }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const currentConnection = peerSlice((state) => state.currentConnection);
-  const { connection, localStream } = currentConnection;
+  const { connection, localStream, remoteStream } = currentConnection;
 
   return (
     <>
@@ -22,6 +22,7 @@ export default function CallAction({ id, peer }: Props) {
           videoRef={videoRef}
           connection={connection}
           localStream={localStream}
+          remoteStream={remoteStream}
         />
       )}
     </>

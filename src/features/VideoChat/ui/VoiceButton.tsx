@@ -10,7 +10,7 @@ const voiceOffIcon = '<i class="fa fa-microphone fa-inverse"></i>';
 const voiceOnIcon = '<i class="fa fa-microphone-slash fa-inverse"></i>';
 
 export default function VoiceButton({ stream, disabled }: Props) {
-  const buttonRef = useRef<HTMLSpanElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
 
   const handleClick = () => {
     if (!stream) return;
@@ -26,13 +26,17 @@ export default function VoiceButton({ stream, disabled }: Props) {
 
   return (
     <button
+      ref={buttonRef}
       className="button__sm button__sm--blue"
       disabled={disabled}
       onClick={handleClick}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
     >
-      <span ref={buttonRef}>
-        <i className="fa fa-microphone fa-inverse"></i>
-      </span>
+      <i className="fa fa-microphone fa-inverse"></i>
     </button>
   );
 }
