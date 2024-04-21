@@ -19,8 +19,8 @@ export default async function screenSharing(_connections: {
       }
 
       return localStream;
-    }).catch(err => {
-      console.log(err)
+    })
+    .catch((err) => {
       return null;
     });
 

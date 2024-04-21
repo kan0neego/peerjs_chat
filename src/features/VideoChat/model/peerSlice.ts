@@ -1,16 +1,17 @@
-import Peer, { MediaConnection } from "peerjs";
+import Peer from "peerjs";
 import { create } from "zustand";
 import type { PeerSliceAction, PeerSliceStore } from "../types";
+import Media from "../../../shared/lib/Media";
 
 export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
   (set, get) => ({
     peer: null,
     currentConnection: {
       connection: null,
+      dataConnection: null,
       localStream: null,
       remoteStream: null,
       displayStream: null,
-      dataConnection: null,
     },
 
     connect: (id, cb) => {
@@ -25,12 +26,6 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
 
       peer.on("open", (connection) => {
         console.log("connection to", connection);
-        /**
-         * const dataConnection = peer.connect("another-user-id")
-         * peer.on("open", () => {
-         *  set(dataConnection)
-         * })
-         */
         if (typeof cb === "function") cb(null, peer);
         set(() => ({ peer }));
       });
@@ -39,7 +34,8 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
         connection.on("data", (data) => {
           if (typeof data === "string") {
             const { close, currentConnection } = get();
-            const { displayStream, localStream, connection } = currentConnection;
+            const { displayStream, localStream, connection } =
+              currentConnection;
             const serializedData = JSON.parse(data);
             switch (serializedData.action) {
               case "close": {
@@ -57,29 +53,40 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
           currentConnection: { ...state.currentConnection, connection },
         }));
 
-        navigator.mediaDevices
-          .getUserMedia({ video: true, audio: true })
-          .then((localStream) => {
-            connection.on("close", () => {
-              const { currentConnection } = get();
-              const { displayStream } = currentConnection;
-              close(localStream, displayStream);
-            });
-            connection.on("stream", (remoteStream) => {
-              set((state) => ({
-                currentConnection: {
-                  ...state.currentConnection,
-                  remoteStream,
-                },
-              }));
-            });
+        const media = new Media();
+        media.getVideoStream((err: any, localStream: MediaStream) => {
+          if (err) {
+            console.error({ err });
+            return null;
+          }
+
+          connection.on("close", () => {
+            const { currentConnection } = get();
+            const { displayStream } = currentConnection;
+            close(localStream, displayStream);
+          });
+
+          connection.on("stream", (remoteStream) => {
             set((state) => ({
               currentConnection: {
                 ...state.currentConnection,
+                remoteStream,
                 localStream,
               },
             }));
           });
+
+          set((state) => ({
+            currentConnection: {
+              ...state.currentConnection,
+              localStream,
+            },
+          }));
+        });
+
+        navigator.mediaDevices
+          .getUserMedia({ video: true, audio: true })
+          .then((localStream) => {});
       });
 
       peer.on("error", (error) => {
@@ -102,36 +109,32 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
     call: (id, cb) => {
       const { peer } = get();
       if (!peer) return;
+      const media = new Media();
 
-      navigator.mediaDevices
-        .getUserMedia({ video: true, audio: true })
-        .then((localStream) => {
-          const { close } = get();
-          const connection = peer.call(id, localStream);
+      media.getVideoStream((err: any, localStream: MediaStream) => {
+        const { close } = get();
+        const connection = peer.call(id, localStream);
 
-          connection.on("stream", (remoteStream) => {
-            cb(remoteStream);
-            set((state) => ({
-              currentConnection: {
-                ...state.currentConnection,
-                remoteStream,
-              },
-            }));
-          });
-
-          connection.on("close", () => close(localStream));
-
+        connection.on("stream", (remoteStream) => {
+          typeof cb === "function" && cb(remoteStream);
           set((state) => ({
             currentConnection: {
               ...state.currentConnection,
-              connection,
-              localStream,
+              remoteStream,
             },
           }));
-        })
-        .catch((rej) => {
-          console.error(rej);
         });
+
+        connection.on("close", () => close(localStream));
+
+        set((state) => ({
+          currentConnection: {
+            ...state.currentConnection,
+            connection,
+            localStream,
+          },
+        }));
+      });
     },
 
     close: (localStream, displayStream) => {

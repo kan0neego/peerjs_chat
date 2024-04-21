@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { peerSlice } from "../../features/VideoChat";
+import { CallButton, peerSlice } from "../../features/VideoChat";
 import { VideoChat } from "../../widgets/VideoChat";
 import "./styles/App.css";
 
 function App() {
-  const [id, setId] = useState<string>("");
+  const [id, setId] = useState<string | null>(null);
   const peer = peerSlice((state) => state.peer);
   const connect = peerSlice((state) => state.connect);
 
@@ -18,19 +18,14 @@ function App() {
         // console.log(peer)
       }
     });
-  }, []);
-
+  }, [connect]);
 
   return (
     <div className="App">
       <span>My peerID: {peer?.id || "Loading..."}</span>
-      <input
-        onChange={(ev) => {
-          const id = ev.target.value;
-          setId(id);
-        }}
-      />
-      <VideoChat id={id} peer={peer} />
+      <input onChange={(ev) => setId(ev.target.value)} />
+      <CallButton id={id} peer={peer} />
+      {id && peer && <VideoChat id={id} peer={peer} />}
     </div>
   );
 }
