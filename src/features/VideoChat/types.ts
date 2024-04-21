@@ -14,9 +14,9 @@ type PeerSliceStore = {
 };
 
 type PeerSliceAction = {
-  call: (id: string, cb: (remoteStream: MediaStream) => void) => void;
+  call: (id: string, cb?: (remoteStream: MediaStream) => void) => void;
   close: (localStream: MediaStream, displayStream?: MediaStream | null) => void;
-  answer: (cb:(remoteStream: MediaStream) => void) => void;
+  answer: (cb?:(remoteStream: MediaStream) => void) => void;
   reject: () => void;
   connect: (id: string | null, cb?: (error: ErrorPeerConnection | null, data: Peer | null) => void) => void;
 

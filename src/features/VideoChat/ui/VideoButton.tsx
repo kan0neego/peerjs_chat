@@ -21,11 +21,8 @@ export default function VideoButton({ stream, disabled }: Props) {
         if (!stream) return;
         const turnOn = switchVideo(stream);
         if (buttonRef.current) {
-          if (turnOn) {
-            buttonRef.current.innerHTML = voiceOffIcon;
-          } else {
-            buttonRef.current.innerHTML = voiceOnIcon;
-          }
+          if (turnOn) buttonRef.current.innerHTML = voiceOffIcon;
+          else buttonRef.current.innerHTML = voiceOnIcon;
         }
       }}
       style={{
@@ -34,7 +31,7 @@ export default function VideoButton({ stream, disabled }: Props) {
         justifyContent: "center",
       }}
     >
-        <i className="fa fa-video fa-inverse"></i>
+      <i className="fa fa-video fa-inverse"></i>
     </button>
   );
 }

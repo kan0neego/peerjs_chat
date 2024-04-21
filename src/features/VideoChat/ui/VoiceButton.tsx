@@ -16,11 +16,8 @@ export default function VoiceButton({ stream, disabled }: Props) {
     if (!stream) return;
     const turnOn = switchVoice(stream);
     if (buttonRef.current) {
-      if (turnOn) {
-        buttonRef.current.innerHTML = voiceOffIcon;
-      } else {
-        buttonRef.current.innerHTML = voiceOnIcon;
-      }
+      if (turnOn) buttonRef.current.innerHTML = voiceOffIcon;
+      else buttonRef.current.innerHTML = voiceOnIcon;
     }
   };
 

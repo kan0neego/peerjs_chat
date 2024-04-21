@@ -5,27 +5,18 @@ import CallAction from "./CallAction";
 
 type Props = {
   id: string;
-  peer: Peer | null;
+  peer: Peer;
 };
 
 const setCurrentConnection = peerSlice.getState().setCurrentConnection;
 
 export default function VideoChat({ id, peer }: Props) {
   useEffect(() => {
-    // Подключение
-    if (peer && id) {
-      const dataConnection = peer.connect(id);
-      dataConnection.on("open", () => {
-        setCurrentConnection({ dataConnection });
-      });
-    }
+    const dataConnection = peer.connect(id);
+    dataConnection.on("open", () => {
+      setCurrentConnection({ dataConnection });
+    });
   }, [id, peer]);
 
-  useEffect(() => {
-    return () => {
-      if (peer) peer.destroy();
-    };
-  }, [peer]);
-
-  return <CallAction id={id} peer={peer} />;
+  return <CallAction peer={peer} />;
 }
