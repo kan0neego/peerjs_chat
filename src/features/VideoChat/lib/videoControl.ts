@@ -1,36 +1,26 @@
+import Media from "../../../shared/lib/Media";
 import type { MediaConnection } from "peerjs";
 
 function switchVideo(stream: MediaStream) {
-  const turnOn = stream.getVideoTracks()[0].enabled;
-  stream.getVideoTracks()[0].enabled = !turnOn;
-
-  return !turnOn;
+  const turn = !stream.getVideoTracks()[0].enabled;
+  stream.getVideoTracks()[0].enabled = turn;
+  return turn;
 }
 
-export default async function videoSharing(_connections: {
-  [key: string]: MediaConnection[];
-}) {
-  const localStream = await navigator.mediaDevices
-    .getUserMedia({ video: true, audio: true })
-    .then((localStream) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      for (let [_, connections] of Object.entries(_connections)) {
-        const mediaConnections = connections.filter(
-          (connection) => connection.type === "media"
-        );
-        mediaConnections.forEach((connection) => {
-          connection.peerConnection
-            .getSenders()[1]
-            .replaceTrack(localStream.getVideoTracks()[0]);
-        });
+export default async function videoSharing(connection: MediaConnection) {
+  const media = new Media();
+  return await media.getVideoStream((err: any, stream: MediaStream) => {
+    if (err) return console.error(err);
+    stream.getAudioTracks()[0].stop();
+    const senders = connection.peerConnection.getSenders();
+    senders.forEach((sender) => {
+      if (sender.track) {
+        if (sender.track.kind === "video") {
+          sender.replaceTrack(stream.getVideoTracks()[0]);
+        }
       }
-
-      return localStream;
-    }).catch(err => {
-      return null;
     });
-
-  return localStream;
+  });
 }
 
 export { switchVideo, videoSharing };

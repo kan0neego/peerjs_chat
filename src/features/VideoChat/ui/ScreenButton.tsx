@@ -1,43 +1,33 @@
-import Peer, { type MediaConnection } from "peerjs";
+import { useRef, useState } from "react";
 import { peerSlice } from "../model/peerSlice";
 import screenSharing from "../lib/screenControl";
 import videoSharing from "../lib/videoControl";
-import { useRef } from "react";
+import { type MediaConnection } from "peerjs";
+import Media from "../../../shared/lib/Media";
 
 type Props = {
-  peer: Peer;
+  connection: MediaConnection;
+  stream: MediaStream;
 };
 
 const setCurrentConnection = peerSlice.getState().setCurrentConnection;
-const displayOnIcon =
-  '<i class="fa fa-desktop fa-stack fa-inverse" aria-hidden="true"></i>';
-const displayOffIcon =
-  '<i class="fa fa-desktop fa-stack fa-inverse" aria-hidden="true"></i> <i class="fa-solid fa-slash fa-stack-1x fa-inverse" aria-hidden="true"></i>';
 
-export default function ScreenButton({ peer }: Props) {
+export default function ScreenButton({ stream, connection }: Props) {
+  const [shared, toShare] = useState(false);
   const spanRef = useRef<HTMLSpanElement | null>(null);
-  const { displayStream } = peerSlice((state) => state.currentConnection);
+  const videoElement = document.querySelector("#local-video") as HTMLVideoElement;
 
   const handleClick = async () => {
-    const connections = peer.connections as {
-      [key: string]: MediaConnection[];
-    };
-    const videoElement = document.querySelector(
-      "#local-video"
-    ) as HTMLVideoElement;
-
-    if (displayStream) {
-      const videoStream = await videoSharing(connections);
-      displayStream.getTracks().forEach((track) => track.stop());
-      spanRef.current!.innerHTML = displayOnIcon;
-      videoElement.srcObject = videoStream;
-      setCurrentConnection({ localStream: videoStream, displayStream: null });
-    } else {
-      const displayStream = await screenSharing(connections);
-      if (!displayStream) return;
-      spanRef.current!.innerHTML = displayOffIcon;
-      videoElement.srcObject = displayStream;
-      setCurrentConnection({ displayStream });
+    const newStream = shared ? await videoSharing(connection) : await screenSharing(connection);
+    if (newStream) {
+      const media = new Media();
+      const videoTracks = newStream.getVideoTracks();
+      const audioTracks = stream.getAudioTracks();
+      const mixin = media.createMediaStream(videoTracks, audioTracks);
+      stream.getVideoTracks().forEach((track) => track.stop());
+      videoElement.srcObject = mixin;
+      toShare((prevState) => !prevState);
+      setCurrentConnection({ localStream: mixin });
     }
   };
 
@@ -53,6 +43,12 @@ export default function ScreenButton({ peer }: Props) {
     >
       <span ref={spanRef} className="fa-stack">
         <i className="fa fa-desktop fa-stack fa-inverse" aria-hidden="true"></i>
+        {shared && (
+          <i
+            className="fa-solid fa-slash fa-stack-1x fa-inverse"
+            aria-hidden="true"
+          ></i>
+        )}
       </span>
     </button>
   );

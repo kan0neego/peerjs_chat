@@ -1,28 +1,19 @@
+import Media from "../../../shared/lib/Media";
 import type { MediaConnection } from "peerjs";
 
-export default async function screenSharing(_connections: {
-  [key: string]: MediaConnection[];
-}) {
-  const localStream = await navigator.mediaDevices
-    .getDisplayMedia()
-    .then((localStream) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      for (let [_, connections] of Object.entries(_connections)) {
-        const mediaConnections = connections.filter(
-          (connection) => connection.type === "media"
-        );
-        mediaConnections.forEach((connection) => {
-          connection.peerConnection
-            .getSenders()[1]
-            .replaceTrack(localStream.getTracks()[0]);
-        });
+export default async function screenSharing(connection: MediaConnection) {
+  const media = new Media();
+
+  return await media.getDisplayStream((err: any, localStream: MediaStream) => {
+    if (err) return console.error(err);
+    const senders = connection.peerConnection.getSenders();
+    senders.forEach((sender) => {
+      if (sender.track) {
+        console.log(sender);
+        if (sender.track.kind === "video") {
+          sender.replaceTrack(localStream.getVideoTracks()[0]);
+        }
       }
-
-      return localStream;
-    })
-    .catch((err) => {
-      return null;
     });
-
-  return localStream;
+  });
 }

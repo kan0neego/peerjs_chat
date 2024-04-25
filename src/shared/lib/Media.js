@@ -4,30 +4,43 @@ class Media {
     this.displayStream = null;
   }
 
-  getVideoStream(cb) {
-    navigator.mediaDevices
+  createMediaStream(videoTrack, audioTrack) {
+    const stream = new MediaStream();
+    videoTrack.forEach((track) => stream.addTrack(track));
+    audioTrack.forEach((track) => stream.addTrack(track));
+    return stream;
+  }
+
+  async getVideoStream(cb) {
+    return await navigator.mediaDevices
       .getUserMedia({
         video: { width: 1280, height: 720 },
-        audio: true,
+        audio: {
+          echoCancellation: true,
+        },
       })
       .then((stream) => {
-        this.mediaStream = stream;
         cb(null, stream);
+        return stream;
       })
       .catch((reason) => {
         cb(reason, null);
+        return null;
       });
   }
 
-  getDisplayStream(cb) {
-    navigator.mediaDevices
-      .getDisplayMedia()
+  async getDisplayStream(cb) {
+    return await navigator.mediaDevices
+      .getDisplayMedia({
+        video: { width: 1280, height: 720 },
+      })
       .then((stream) => {
-        this.displayStream = stream;
         cb(null, stream);
+        return stream;
       })
       .catch((reason) => {
         cb(reason, null);
+        return null;
       });
   }
 }

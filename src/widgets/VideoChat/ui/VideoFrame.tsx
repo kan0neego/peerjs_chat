@@ -1,20 +1,52 @@
-import Video from "./Video";
+import { motion } from "framer-motion";
+import { Video } from "../../../entities/Video";
+import { Dispatch, SetStateAction, forwardRef } from "react";
 
 type Props = {
   id: string;
+  mainDisplay: string;
+  setMain: Dispatch<SetStateAction<string>>;
   mediaStream: MediaStream | null;
 };
 
-export default function VideoFrame({ id, mediaStream }: Props) {
+export default forwardRef<HTMLDivElement, Props>(function VideoFrame({
+  id,
+  mainDisplay,
+  setMain,
+  mediaStream,
+}: Props, ref) {
   return (
-    <div
+    <motion.div
+      ref={ref}
       style={{
-        width: "100%",
-        height: "100%",
-        position: "relative",
+        position: "absolute",
       }}
+      variants={{
+        initial: {
+          width: "100%",
+          height: "100%",
+          zIndex: 100,
+        },
+        animate: {
+          right: 20,
+          bottom: 5,
+          width: 240,
+          height: 135,
+          zIndex: 110,
+        },
+      }}
+      initial="initial"
+      animate={id === mainDisplay ? "initial" : "animate"}
+      onClick={() => setMain(id)}
     >
-      <Video id={id} mediaStream={mediaStream} />
-    </div>
+      <div
+        style={{
+          backgroundColor: "yellow",
+          borderRadius: "15px",
+        }}
+      >
+        <Video id={id} mediaStream={mediaStream} />
+      </div>
+    </motion.div>
   );
-}
+});
