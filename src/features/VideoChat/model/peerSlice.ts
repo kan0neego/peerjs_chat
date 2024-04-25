@@ -10,7 +10,6 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
     dataConnection: null,
     localStream: null,
     remoteStream: null,
-    displayStream: null,
     isCalling: false,
 
     connect: (id, cb) => {
@@ -98,24 +97,18 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
 
     close: () => {
       const { connection, dataConnection, localStream } = get();
-      if (!connection || !localStream || !dataConnection) return false;
-      connection.close();
-      dataConnection.close();
-      localStream.getTracks().forEach((str) => str.stop());
+      if (connection) connection.close();
+      if (dataConnection) dataConnection.close();
+      if (localStream) localStream.getTracks().forEach((str) => str.stop());
       set(() => ({ connection: null, localStream: null, remoteStream: null, dataConnection: null }));
       return true;
     },
 
     reject: () => {
       const { dataConnection, close } = get();
-      if (dataConnection) {
-        dataConnection.send(JSON.stringify({ action: "close", data: null }));
-        const closed = close();
-        return closed;
-      } else {
-        console.error("Соединение к удаленному пользователю не установлено.");
-        return false;
-      }
+      if (dataConnection) dataConnection.send(JSON.stringify({ action: "close", data: null }));
+      const closed = close();
+      return closed;
     },
 
     setCurrentConnection: (data) => {

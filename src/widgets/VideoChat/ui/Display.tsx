@@ -10,6 +10,10 @@ export default function Display() {
   const [main, setMain] = useState<SetMain>("local-video");
 
   useEffect(() => {
+    if (remoteStream) setMain("remote-video");
+  }, [remoteStream]);
+
+  useEffect(() => {
     const resizeableEl = document.querySelector("#dragger")!;
     const ro = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect;
@@ -22,25 +26,21 @@ export default function Display() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [main, remoteVideoRef, localVideoRef]);
 
-  useEffect(() => {
-    if (remoteStream) setMain("remote-video");
-  }, [remoteStream]);
-
   return (
     <>
       <VideoFrame
         ref={localVideoRef}
         id="local-video"
-        mainDisplay={main}
-        setMain={setMain}
+        isMain={main === "local-video"}
+        onClick={() => setMain("local-video")}
         mediaStream={localStream}
       />
       {remoteStream && (
         <VideoFrame
           ref={remoteVideoRef}
           id="remote-video"
-          mainDisplay={main}
-          setMain={setMain}
+          isMain={main === "remote-video"}
+          onClick={() => setMain("remote-video")}
           mediaStream={remoteStream}
         />
       )}

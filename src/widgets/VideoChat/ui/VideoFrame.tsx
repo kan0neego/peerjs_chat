@@ -1,18 +1,18 @@
 import { motion } from "framer-motion";
 import { Video } from "../../../entities/Video";
-import { Dispatch, SetStateAction, forwardRef } from "react";
+import { forwardRef } from "react";
 
 type Props = {
   id: string;
-  mainDisplay: string;
-  setMain: Dispatch<SetStateAction<string>>;
+  isMain: boolean;
+  onClick: () => void;
   mediaStream: MediaStream | null;
 };
 
 export default forwardRef<HTMLDivElement, Props>(function VideoFrame({
   id,
-  mainDisplay,
-  setMain,
+  isMain,
+  onClick,
   mediaStream,
 }: Props, ref) {
   return (
@@ -36,8 +36,8 @@ export default forwardRef<HTMLDivElement, Props>(function VideoFrame({
         },
       }}
       initial="initial"
-      animate={id === mainDisplay ? "initial" : "animate"}
-      onClick={() => setMain(id)}
+      animate={isMain ? "initial" : "animate"}
+      onClick={onClick}
     >
       <div
         style={{
