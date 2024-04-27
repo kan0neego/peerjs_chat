@@ -3,7 +3,7 @@ import { switchVoice } from "../lib/voiceControl";
 
 type Props = {
   disabled?: boolean;
-  stream: MediaStream | null;
+  stream: MediaStream;
 };
 
 const voiceOffIcon = '<i class="fa fa-microphone fa-inverse"></i>';
@@ -13,7 +13,6 @@ export default function VoiceButton({ stream, disabled }: Props) {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
   const handleClick = () => {
-    if (!stream) return;
     const turnOn = switchVoice(stream);
     if (buttonRef.current) {
       if (turnOn) buttonRef.current.innerHTML = voiceOffIcon;
@@ -31,6 +30,7 @@ export default function VoiceButton({ stream, disabled }: Props) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        flexShrink: 0,
       }}
     >
       <i className="fa fa-microphone fa-inverse"></i>

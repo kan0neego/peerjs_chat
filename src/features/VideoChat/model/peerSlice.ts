@@ -6,13 +6,13 @@ import Media from "../../../shared/lib/Media";
 export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
   (set, get) => ({
     peer: null,
-    currentConnection: {
-      connection: null,
-      dataConnection: null,
-      localStream: null,
-      remoteStream: null,
-      displayStream: null,
-    },
+    connection: null,
+    dataConnection: null,
+    localStream: null,
+    remoteStream: null,
+    isCalling: false,
+    isVideoEnabled: { id: "", enabled: true },
+    isLocalVideoEnabled: true,
 
     connect: (id, cb) => {
       let peer: Peer;
@@ -24,8 +24,8 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
         peer = new Peer();
       }
 
-      peer.on("open", (connection) => {
-        console.log("connection to", connection);
+      peer.on("open", (id) => {
+        console.log("connection to", id);
         if (typeof cb === "function") cb(null, peer);
         set(() => ({ peer }));
       });
@@ -33,14 +33,15 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
       peer.on("connection", (connection) => {
         connection.on("data", (data) => {
           if (typeof data === "string") {
-            const { close, currentConnection } = get();
-            const { displayStream, localStream, connection } =
-              currentConnection;
+            const { close } = get();
             const serializedData = JSON.parse(data);
             switch (serializedData.action) {
+              case "video-mute": {
+                set(() => ({ isVideoEnabled: serializedData.data }));
+                break;
+              }
               case "close": {
-                if (connection) connection.close();
-                if (localStream) close(localStream, displayStream);
+                close();
                 break;
               }
             }
@@ -49,44 +50,16 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
       });
 
       peer.on("call", (connection) => {
-        set((state) => ({
-          currentConnection: { ...state.currentConnection, connection },
-        }));
-
         const media = new Media();
         media.getVideoStream((err: any, localStream: MediaStream) => {
-          if (err) {
-            console.error({ err });
-            return null;
-          }
-
-          connection.on("close", () => {
-            const { currentConnection } = get();
-            const { displayStream } = currentConnection;
-            close(localStream, displayStream);
-          });
-
-          connection.on("stream", (remoteStream) => {
-            set((state) => ({
-              currentConnection: {
-                ...state.currentConnection,
-                remoteStream,
-                localStream,
-              },
-            }));
-          });
-
-          set((state) => ({
-            currentConnection: {
-              ...state.currentConnection,
-              localStream,
-            },
-          }));
+          if (err) return null;
+          connection.on("stream", (remoteStream) =>
+            set(() => ({ remoteStream }))
+          );
+          connection.on("close", () => close());
+          set(() => ({ localStream }));
         });
-
-        navigator.mediaDevices
-          .getUserMedia({ video: true, audio: true })
-          .then((localStream) => {});
+        set(() => ({ connection, isCalling: true }));
       });
 
       peer.on("error", (error) => {
@@ -98,6 +71,7 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
           case "unavailable-id": {
             break;
           }
+          case "network":
           case "disconnected": {
             peer.reconnect();
             break;
@@ -106,87 +80,57 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
       });
     },
 
-    call: (id, cb) => {
+    call: (id) => {
       const { peer } = get();
       if (!peer) return;
       const media = new Media();
-
       media.getVideoStream((err: any, localStream: MediaStream) => {
         const { close } = get();
         const connection = peer.call(id, localStream);
-
-        connection.on("stream", (remoteStream) => {
-          typeof cb === "function" && cb(remoteStream);
-          set((state) => ({
-            currentConnection: {
-              ...state.currentConnection,
-              remoteStream,
-            },
-          }));
-        });
-
-        connection.on("close", () => close(localStream));
-
-        set((state) => ({
-          currentConnection: {
-            ...state.currentConnection,
-            connection,
-            localStream,
-          },
-        }));
+        connection.on("stream", (remoteStream) =>
+          set(() => ({ remoteStream }))
+        );
+        connection.on("close", () => close());
+        set(() => ({ connection, localStream }));
       });
     },
 
-    close: (localStream, displayStream) => {
-      localStream.getTracks().forEach((str) => str.stop());
-      if (displayStream) displayStream.getTracks().forEach((str) => str.stop());
-
-      set((state) => ({
-        currentConnection: {
-          ...state.currentConnection,
-          connection: null,
-          localStream: null,
-          remoteStream: null,
-        },
-      }));
-    },
-
     answer: (cb) => {
-      const { currentConnection } = get();
-      const { connection, localStream } = currentConnection;
+      const { connection, localStream } = get();
       if (connection && localStream) {
         connection.answer(localStream);
         connection.on("stream", (remoteStream: MediaStream) => {
           if (typeof cb === "function") cb(remoteStream);
-          set((state) => ({
-            currentConnection: {
-              ...state.currentConnection,
-              connection,
-              remoteStream,
-            },
-          }));
+          set(() => ({ remoteStream, isCalling: false }));
         });
       }
     },
 
-    reject: () => {
-      const { currentConnection, close } = get();
-      const { connection, dataConnection, localStream } = currentConnection;
-
-      if (dataConnection) {
-        dataConnection.send(JSON.stringify({ action: "close", data: null }));
-      } else {
-        throw new Error("Соединение к удаленному пользователю не установлено.");
-      }
-
+    close: () => {
+      const { connection, dataConnection, localStream } = get();
       if (connection) connection.close();
-      if (localStream) close(localStream);
+      if (dataConnection) dataConnection.close();
+      if (localStream) localStream.getTracks().forEach((str) => str.stop());
+      set(() => ({
+        connection: null,
+        localStream: null,
+        remoteStream: null,
+        dataConnection: null,
+        isCalling: false,
+      }));
+      return true;
+    },
+
+    reject: () => {
+      const { dataConnection, close } = get();
+      if (dataConnection)
+        dataConnection.send(JSON.stringify({ action: "close", data: null }));
+      const closed = close();
+      return closed;
     },
 
     setCurrentConnection: (data) => {
-      set((state) => ({
-        currentConnection: { ...state.currentConnection, ...data },
-      }));
+      set(() => ({ ...data }));
     },
   })
 );

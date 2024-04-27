@@ -5,14 +5,15 @@ function Video({ id, mediaStream }: Props) {
 
   useEffect(() => {
     if (mediaStream && videoRef.current) {
-      videoRef.current.srcObject = mediaStream;
+      if (!videoRef.current.srcObject) videoRef.current.srcObject = mediaStream;
     }
-  }, [id, mediaStream]);
+  }, [mediaStream]);
 
   return (
     <video
       id={id}
       ref={videoRef}
+      muted={id === "local-video"}
       autoPlay
       playsInline
       onDoubleClick={(e) => {
@@ -22,8 +23,6 @@ function Video({ id, mediaStream }: Props) {
         width: "100%",
         height: "100%",
         position: "absolute",
-        top: "-1px",
-        left: "-1px",
         cursor: "pointer",
       }}
     />

@@ -1,25 +1,30 @@
 import type { DataConnection, MediaConnection, Peer, PeerError } from "peerjs";
 
-interface CurrentConnection {
+interface CurrentConnection {}
+
+type PeerSliceStore = {
+  peer: Peer | null;
   connection: MediaConnection | null;
   dataConnection: DataConnection | null;
   remoteStream: MediaStream | null;
   localStream: MediaStream | null;
-  displayStream: MediaStream | null;
-}
-
-type PeerSliceStore = {
-  peer: Peer | null;
-  currentConnection: CurrentConnection;
+  isCalling: boolean;
+  isLocalVideoEnabled: boolean;
+  isVideoEnabled: {
+    id: string,
+    enabled: boolean;
+  };
 };
 
 type PeerSliceAction = {
+  connect: (
+    id: string | null,
+    cb?: (error: ErrorPeerConnection | null, data: Peer | null) => void
+  ) => void;
   call: (id: string, cb?: (remoteStream: MediaStream) => void) => void;
-  close: (localStream: MediaStream, displayStream?: MediaStream | null) => void;
-  answer: (cb?:(remoteStream: MediaStream) => void) => void;
-  reject: () => void;
-  connect: (id: string | null, cb?: (error: ErrorPeerConnection | null, data: Peer | null) => void) => void;
-
+  close: () => boolean;
+  answer: (cb?: (remoteStream: MediaStream) => void) => void;
+  reject: () => boolean;
   setCurrentConnection: (currentConnection: Partial<CurrentConnection>) => void;
 };
 
