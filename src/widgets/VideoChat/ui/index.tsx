@@ -1,12 +1,10 @@
-import { peerSlice } from "../../../features/VideoChat";
 import Display from "./Display";
 import CallAction from "./CallAction";
 import { DragableCard } from "../../../shared/ui/Card";
+import Peer, { type MediaConnection } from "peerjs";
 
-export default function VideoChat() {
-  const connection = peerSlice((state) => state.connection);
-
-  return connection ? (
+export default function VideoChat({ peer, connection }: Props) {
+  return (
     <DragableCard minWidth={360} minHeight={260}>
       <div
         style={{
@@ -25,10 +23,10 @@ export default function VideoChat() {
             justifyContent: "center",
             flex: "1 1 100%",
             position: "relative",
-            padding: "15px",
+            overflow: "hidden",
           }}
         >
-          <Display />
+          <Display peer={peer} connection={connection} />
         </div>
         <div
           style={{
@@ -39,9 +37,11 @@ export default function VideoChat() {
             padding: "0.5rem 0",
           }}
         >
-          <CallAction connection={connection} />
+          <CallAction peer={peer} connection={connection} />
         </div>
       </div>
     </DragableCard>
-  ) : null;
+  );
 }
+
+type Props = { peer: Peer; connection: MediaConnection };

@@ -1,20 +1,22 @@
 import { motion } from "framer-motion";
-import { Video } from "../../../entities/Video";
+import { Preview, Video } from "../../../entities/Video";
 import { forwardRef } from "react";
+import { peerSlice } from "../../../features/VideoChat";
 
 type Props = {
   id: string;
   isMain: boolean;
+  enabled: boolean;
   onClick: () => void;
   mediaStream: MediaStream | null;
 };
 
-export default forwardRef<HTMLDivElement, Props>(function VideoFrame({
-  id,
-  isMain,
-  onClick,
-  mediaStream,
-}: Props, ref) {
+export default forwardRef<HTMLDivElement, Props>(function VideoFrame(
+  { id, isMain, onClick, mediaStream, enabled }: Props,
+  ref
+) {
+  const isCalling = peerSlice((state) => state.isCalling);
+
   return (
     <motion.div
       ref={ref}
@@ -41,11 +43,17 @@ export default forwardRef<HTMLDivElement, Props>(function VideoFrame({
     >
       <div
         style={{
-          backgroundColor: "yellow",
-          borderRadius: "15px",
+          width: "100%",
+          height: "100%",
+          backgroundColor: "rgba(0, 0, 0, 0.1)",
+          borderRadius: "10px",
         }}
       >
-        <Video id={id} mediaStream={mediaStream} />
+        {isCalling || !enabled ? (
+          <Preview name="TimRoman" srcAvatar="" />
+        ) : (
+          <Video id={id} mediaStream={mediaStream} />
+        )}
       </div>
     </motion.div>
   );

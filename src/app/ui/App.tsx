@@ -35,7 +35,9 @@ function App() {
       <span>My peerID: {peer?.id || "Loading..."}</span>
       <input onChange={(ev) => setId(ev.target.value)} />
       <CallButton id={id} peer={peer} />
-      {id && peer && <VideoChat />}
+      {id && peer && connection && (
+        <VideoChat peer={peer} connection={connection} />
+      )}
     </div>
   );
 }

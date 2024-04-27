@@ -30,6 +30,7 @@ export default function VoiceButton({ stream, disabled }: Props) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        flexShrink: 0,
       }}
     >
       <i className="fa fa-microphone fa-inverse"></i>

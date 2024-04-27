@@ -7,7 +7,7 @@ function Video({ id, mediaStream }: Props) {
     if (mediaStream && videoRef.current) {
       if (!videoRef.current.srcObject) videoRef.current.srcObject = mediaStream;
     }
-  }, [id, mediaStream]);
+  }, [mediaStream]);
 
   return (
     <video

@@ -6,16 +6,17 @@ import { type MediaConnection } from "peerjs";
 import Media from "../../../shared/lib/Media";
 
 type Props = {
+  peerId: string;
   connection: MediaConnection;
   stream: MediaStream;
 };
 
 const setCurrentConnection = peerSlice.getState().setCurrentConnection;
 
-export default function ScreenButton({ stream, connection }: Props) {
+export default function ScreenButton({ peerId, stream, connection }: Props) {
   const [shared, toShare] = useState(false);
   const spanRef = useRef<HTMLSpanElement | null>(null);
-  const videoElement = document.querySelector("#local-video") as HTMLVideoElement;
+  const videoElement = document.querySelector(`#local-video`) as HTMLVideoElement;
 
   const handleClick = async () => {
     const newStream = shared ? await videoSharing(connection) : await screenSharing(connection);
@@ -39,6 +40,7 @@ export default function ScreenButton({ stream, connection }: Props) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        flexShrink: 0,
       }}
     >
       <span ref={spanRef} className="fa-stack">

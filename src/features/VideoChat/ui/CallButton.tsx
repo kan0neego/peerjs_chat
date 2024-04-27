@@ -17,6 +17,9 @@ export default function CallButton({ id, peer }: Props) {
       onClick={() => {
         if (isCallable) call(id);
       }}
+      style={{
+        flexShrink: 0,
+      }}
     >
       <i className="fa fa-phone" aria-hidden="true"></i>
     </button>

@@ -11,6 +11,8 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
     localStream: null,
     remoteStream: null,
     isCalling: false,
+    isVideoEnabled: { id: "", enabled: true },
+    isLocalVideoEnabled: true,
 
     connect: (id, cb) => {
       let peer: Peer;
@@ -34,6 +36,10 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
             const { close } = get();
             const serializedData = JSON.parse(data);
             switch (serializedData.action) {
+              case "video-mute": {
+                set(() => ({ isVideoEnabled: serializedData.data }));
+                break;
+              }
               case "close": {
                 close();
                 break;
@@ -47,7 +53,9 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
         const media = new Media();
         media.getVideoStream((err: any, localStream: MediaStream) => {
           if (err) return null;
-          connection.on("stream", (remoteStream) => set(() => ({ remoteStream })));
+          connection.on("stream", (remoteStream) =>
+            set(() => ({ remoteStream }))
+          );
           connection.on("close", () => close());
           set(() => ({ localStream }));
         });
@@ -63,6 +71,7 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
           case "unavailable-id": {
             break;
           }
+          case "network":
           case "disconnected": {
             peer.reconnect();
             break;
@@ -78,7 +87,9 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
       media.getVideoStream((err: any, localStream: MediaStream) => {
         const { close } = get();
         const connection = peer.call(id, localStream);
-        connection.on("stream", (remoteStream) => set(() => ({ remoteStream })));
+        connection.on("stream", (remoteStream) =>
+          set(() => ({ remoteStream }))
+        );
         connection.on("close", () => close());
         set(() => ({ connection, localStream }));
       });
@@ -100,13 +111,20 @@ export const peerSlice = create<PeerSliceStore & PeerSliceAction>(
       if (connection) connection.close();
       if (dataConnection) dataConnection.close();
       if (localStream) localStream.getTracks().forEach((str) => str.stop());
-      set(() => ({ connection: null, localStream: null, remoteStream: null, dataConnection: null }));
+      set(() => ({
+        connection: null,
+        localStream: null,
+        remoteStream: null,
+        dataConnection: null,
+        isCalling: false,
+      }));
       return true;
     },
 
     reject: () => {
       const { dataConnection, close } = get();
-      if (dataConnection) dataConnection.send(JSON.stringify({ action: "close", data: null }));
+      if (dataConnection)
+        dataConnection.send(JSON.stringify({ action: "close", data: null }));
       const closed = close();
       return closed;
     },

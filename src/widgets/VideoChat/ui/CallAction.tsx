@@ -7,13 +7,14 @@ import {
 } from "../../../features/VideoChat";
 import AcceptCall from "../../../features/VideoChat/ui/AcceptCall";
 import { Fragment } from "react/jsx-runtime";
-import { type MediaConnection } from "peerjs";
+import Peer, { type MediaConnection } from "peerjs";
 
 type Props = {
+  peer: Peer;
   connection: MediaConnection;
 };
 
-export default function CallAction({ connection }: Props) {
+export default function CallAction({ peer, connection }: Props) {
   const isCalling = peerSlice((state) => state.isCalling);
   const localStream = peerSlice((state) => state.localStream);
 
@@ -21,9 +22,16 @@ export default function CallAction({ connection }: Props) {
     <Fragment>
       {localStream && (
         <>
-          {isCalling && <AcceptCall />}
-          <ScreenButton stream={localStream} connection={connection} />
-          <VideoButton stream={localStream} />
+          {isCalling ? (
+            <AcceptCall />
+          ) : (
+            <ScreenButton
+              peerId={peer.id}
+              stream={localStream}
+              connection={connection}
+            />
+          )}
+          <VideoButton peerId={peer.id} stream={localStream} />
           <VoiceButton stream={localStream} />
           <RejectCall />
         </>

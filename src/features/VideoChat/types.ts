@@ -9,6 +9,11 @@ type PeerSliceStore = {
   remoteStream: MediaStream | null;
   localStream: MediaStream | null;
   isCalling: boolean;
+  isLocalVideoEnabled: boolean;
+  isVideoEnabled: {
+    id: string,
+    enabled: boolean;
+  };
 };
 
 type PeerSliceAction = {

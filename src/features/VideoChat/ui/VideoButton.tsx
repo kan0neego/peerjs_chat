@@ -1,7 +1,9 @@
 import { useRef } from "react";
 import { switchVideo } from "../lib/videoControl";
+import { peerSlice } from "../model/peerSlice";
 
 type Props = {
+  peerId: string;
   disabled?: boolean;
   stream: MediaStream;
 };
@@ -9,15 +11,23 @@ type Props = {
 const voiceOffIcon = '<i class="fa fa-video fa-inverse"></i>';
 const voiceOnIcon = '<i class="fa fa-video-slash fa-inverse"></i>';
 
-export default function VideoButton({ stream, disabled }: Props) {
+const setPeerProp = peerSlice.getState().setCurrentConnection;
+
+export default function VideoButton({ peerId, stream, disabled }: Props) {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const dataConnection = peerSlice((state) => state.dataConnection);
 
   const handleClick = () => {
-    const turnOn = switchVideo(stream);
-    if (buttonRef.current) {
-      if (turnOn) buttonRef.current.innerHTML = voiceOffIcon;
-      else buttonRef.current.innerHTML = voiceOnIcon;
+    const button = buttonRef.current!;
+    const turn = switchVideo(stream);
+    const data = { id: peerId, enabled: turn };
+    if (dataConnection) {
+      const payload = JSON.stringify({ action: "video-mute", data });
+      dataConnection.send(payload);
     }
+    if (turn) button.innerHTML = voiceOffIcon;
+    else button.innerHTML = voiceOnIcon;
+    setPeerProp({ isLocalVideoEnabled: turn });
   };
 
   return (
@@ -30,6 +40,7 @@ export default function VideoButton({ stream, disabled }: Props) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        flexShrink: 0,
       }}
     >
       <i className="fa fa-video fa-inverse"></i>
